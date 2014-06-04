@@ -20,13 +20,13 @@
     delegate_to: "{{yourhaproxyserver}}"
 
   - name: Change a server(s) weight
-    haproxy: action=set_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 frontend=www
+    haproxy: action=set_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 backend=www
     delegate_to: "{{yourhaproxyserver}}"
     register: setweight
     tags: test
 
   - name: Show the current weight and the initial weight of server(s)
-    haproxy: action=get_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock frontend=www
+    haproxy: action=get_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
     delegate_to: "{{yourhaproxyserver}}"
     register: getweight
     tags: test

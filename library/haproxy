@@ -47,9 +47,9 @@ options:
       - Haproxy socket file name with path.
     required: false
     default: /var/run/haproxy.sock
-  frontend:
+  backend:
     description:
-      - Name of the haproxy frontend pool.
+      - Name of the haproxy backend pool.
         Required, else auto-detection applied.
     required: false
     default: auto-detected
@@ -61,23 +61,23 @@ options:
 '''
 
 EXAMPLES = '''
-# disable backend server in 'www' frontend
-- haproxy: action=disable_server host={{ inventory_hostname }} frontend=www
+# disable backend server in 'www' backend
+- haproxy: action=disable_server host={{ inventory_hostname }} backend=www
 
-# disable backend server without frontend name (applied to all)
+# disable backend server without backend name (applied to all)
 - haproxy: action=disable_server host={{ inventory_hostname }}
 
 # disable server, provide socket file
-- haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock frontend=www
+- haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
 
-# enable backend server in 'www' frontend
-- haproxy: action=enable_server host={{ inventory_hostname }} frontend=www
+# enable backend server in 'www' backend
+- haproxy: action=enable_server host={{ inventory_hostname }} backend=www
 
-# report a server's current weight in 'www' frontend
-- haproxy: action=get_weight host={{ inventory_hostname }} frontend=www
+# report a server's current weight in 'www' backend
+- haproxy: action=get_weight host={{ inventory_hostname }} backend=www
 
-# change a server's current weight in 'www' frontend
-- haproxy: action=set_weight host={{ inventory_hostname }} frontend=www weight=10
+# change a server's current weight in 'www' backend
+- haproxy: action=set_weight host={{ inventory_hostname }} backend=www weight=10
 
 author: Ravi Bhure <ravibhure@gmail.com>
 version_added: "1.6"
@@ -105,14 +105,14 @@ def main():
         argument_spec = dict(
             action = dict(required=True, default=None, choices=ACTION_CHOICES),
             host=dict(required=True, default=None),
-	    frontend=dict(required=False, default=None),
+	    backend=dict(required=False, default=None),
 	    weight=dict(required=False, default=None),
             socket = dict(required=False, default=DEFAULT_SOCKET_LOCATION)
         ),
     )
     action = module.params['action']
     host = module.params['host']
-    frontend = module.params['frontend']
+    backend = module.params['backend']
     weight = module.params['weight']
     socket = module.params['socket']
 
@@ -163,7 +163,7 @@ class HAProxy(object):
         self.module = module
         self.action = kwargs['action']
         self.host = kwargs['host']
-        self.frontend = kwargs['frontend']
+        self.backend = kwargs['backend']
         self.weight = kwargs['weight']
         self.socket = kwargs['socket']
 
@@ -191,9 +191,9 @@ class HAProxy(object):
         self.client.close()
         return result
 
-    def enable_server(self, host, frontend):
+    def enable_server(self, host, backend):
         """
-        Enables backend server for a particular frontend.
+        Enables backend server for a particular backend.
 
         enable server <backend>/<server>
           If the server was previously marked as DOWN for maintenance, this marks the
@@ -208,7 +208,7 @@ class HAProxy(object):
         Syntax: enable server <pxname>/<svname>
         """
         svname = host
-        if self.frontend is None:
+        if self.backend is None:
           output = self.execute('show stat')
           #sanitize and make a list of lines
           output = output.lstrip('# ').strip()
@@ -216,20 +216,20 @@ class HAProxy(object):
           result = output
 
           for line in result:
-            if 'FRONTEND' in line:
+            if 'BACKEND' in line:
               result =  line.split(',')[0]
 	      pxname = result
 	      cmd = "enable server %s/%s" % (pxname, svname)
 	      self.execute(cmd)
 
 	else:
-            pxname = frontend
+            pxname = backend
 	    cmd = "enable server %s/%s" % (pxname, svname)
 	    self.execute(cmd)
 
-    def disable_server(self, host, frontend):
+    def disable_server(self, host, backend):
         """
-        Disable backend server for a particular frontend.
+        Disable backend server for a particular backend.
 
         disable server <backend>/<server>
           Mark the server DOWN for maintenance. In this mode, no more checks will be
@@ -249,7 +249,7 @@ class HAProxy(object):
         Syntax: disable server <pxname>/<svname>
         """
         svname = host
-        if self.frontend is None:
+        if self.backend is None:
           output = self.execute('show stat')
           #sanitize and make a list of lines
           output = output.lstrip('# ').strip()
@@ -257,18 +257,18 @@ class HAProxy(object):
           result = output
 
           for line in result:
-            if 'FRONTEND' in line:
+            if 'BACKEND' in line:
               result =  line.split(',')[0]
               pxname = result
               cmd = "disable server %s/%s" % (pxname, svname)
               self.execute(cmd)
 
         else:
-            pxname = frontend
+            pxname = backend
             cmd = "disable server %s/%s" % (pxname, svname)
             self.execute(cmd)
 
-    def get_weight(self, host, frontend):
+    def get_weight(self, host, backend):
         """
         Report a server's current weight.
 
@@ -283,7 +283,7 @@ class HAProxy(object):
         Syntax: get weight <pxname>/<svname>
         """
         svname = host
-        if self.frontend is None:
+        if self.backend is None:
           output = self.execute('show stat')
           #sanitize and make a list of lines
           output = output.lstrip('# ').strip()
@@ -291,18 +291,18 @@ class HAProxy(object):
           result = output
 
           for line in result:
-            if 'FRONTEND' in line:
+            if 'BACKEND' in line:
               result =  line.split(',')[0]
               pxname = result
               cmd = "get weight %s/%s" % (pxname, svname)
               self.execute(cmd)
 
         else:
-            pxname = frontend
+            pxname = backend
             cmd = "get weight %s/%s" % (pxname, svname)
             self.execute(cmd)
 
-    def set_weight(self, host, frontend, weight):
+    def set_weight(self, host, backend, weight):
         """
         Change a server's current weight.
 
@@ -326,7 +326,7 @@ class HAProxy(object):
         """
         svname = host
 	weight = weight
-        if self.frontend is None:
+        if self.backend is None:
           output = self.execute('show stat')
           #sanitize and make a list of lines
           output = output.lstrip('# ').strip()
@@ -334,14 +334,14 @@ class HAProxy(object):
           result = output
 
           for line in result:
-            if 'FRONTEND' in line:
+            if 'BACKEND' in line:
               result =  line.split(',')[0]
               pxname = result
               cmd = "set weight %s/%s %s" % (pxname, svname, weight)
               self.execute(cmd)
 
         else:
-            pxname = frontend
+            pxname = backend
             cmd = "set weight %s/%s %s" % (pxname, svname, weight)
             self.execute(cmd)
 
@@ -352,17 +352,17 @@ class HAProxy(object):
         """
         # toggle enable/disbale server
         if self.action == 'enable_server':
-            self.enable_server(self.host, self.frontend)
+            self.enable_server(self.host, self.backend)
 
         elif self.action == 'disable_server':
-            self.disable_server(self.host, self.frontend)
+            self.disable_server(self.host, self.backend)
 
         # toggle get/set weight
         elif self.action == 'get_weight':
-            self.get_weight(self.host, self.frontend)
+            self.get_weight(self.host, self.backend)
 
         elif self.action == 'set_weight':
-            self.set_weight(self.host, self.frontend, self.weight)
+            self.set_weight(self.host, self.backend, self.weight)
         # wtf?
         else:
             self.module.fail_json(msg="unknown action specified: '%s'" % \
