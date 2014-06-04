@@ -3,15 +3,34 @@
 - hosts: webservers
   serial: 5
 
+  vars:
+    yourhaproxyserver: 127.0.0.1
+
   tasks:
 
   - name: take out of load balancer pool
     haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock
-    delegate_to: 127.0.0.1
+    delegate_to: "{{yourhaproxyserver}}"
 
   - name: actual steps would go here
     yum: name=acme-web-stack state=latest
 
   - name: add back to load balancer pool
     haproxy: action=enable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock
-    delegate_to: 127.0.0.1
+    delegate_to: "{{yourhaproxyserver}}"
+
+  - name: Change a server(s) weight
+    haproxy: action=set_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 frontend=www
+    delegate_to: "{{yourhaproxyserver}}"
+    register: setweight
+    tags: test
+
+  - name: Show the current weight and the initial weight of server(s)
+    haproxy: action=get_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock frontend=www
+    delegate_to: "{{yourhaproxyserver}}"
+    register: getweight
+    tags: test
+
+  - name: Print weight
+    debug: var=getweight
+    tags: test
