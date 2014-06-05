@@ -8,8 +8,8 @@
 
   tasks:
 
-  - name: take out of load balancer pool
-    haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock
+  - name: take out of load balancer pool and drop open sessions to it
+    haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock shutdown_sessions=true
     delegate_to: "{{yourhaproxyserver}}"
 
   - name: actual steps would go here

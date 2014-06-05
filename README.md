@@ -17,6 +17,9 @@ Example
     # disable server, provide socket file
     - haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
 
+    # disable backend server in 'www' backend and drop open sessions to it
+    - haproxy: action=disable_server host={{ inventory_hostname }} backend=www socket=/var/run/haproxy.sock shutdown_sessions=true
+
     # enable server in 'www' backend
     - haproxy: action=enable_server host={{ inventory_hostname }} backend=www
 
@@ -30,7 +33,7 @@ Dependencies
 ------------
 
 Haproxy socket commands are restricted and can only be issued on sockets configured for level 'admin', 
-Check - http://haproxy.1wt.eu/download/1.4/doc/configuration.txt,
+Check - http://haproxy.1wt.eu/download/1.5/doc/configuration.txt,
 Exampe: 'stats socket /var/run/haproxy.sock level admin'
 
 License
