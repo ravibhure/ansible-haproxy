@@ -55,14 +55,12 @@ options:
     default: auto-detected
   weight:
     description:
-      - The value passed in argument. If the value ends with the '%' sign, then the new weight will be relative to the initially cnfigured weight.
-	Relative weights are only permitted between 0 and 100% and absolute weights are permitted between 0 and 256.
+      - The value passed in argument. If the value ends with the '%' sign, then the new weight will be relative to the initially cnfigured weight. Relative weights are only permitted between 0 and 100% and absolute weights are permitted between 0 and 256.
     required: false
     default: null
   shutdown_sessions:
     description:
-      - When disabling server, immediately terminate all the sessions attached to the specified server.
-	This can be used to terminate long-running sessions after a server is put into maintenance mode, for instance.
+      - When disabling server, immediately terminate all the sessions attached to the specified server. This can be used to terminate long-running sessions after a server is put into maintenance mode, for instance.
     required: false
     default: false
 '''
