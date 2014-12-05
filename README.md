@@ -1,33 +1,31 @@
 Ansible Module HAProxy
 ===================
 
-An Ansible module to handle actions enable/disable server and set/get weight from haproxy using socket.
-
+An Ansible module to handle state enabled/disabled server from haproxy using socket.
+Showing the current and current weight for backend server(s) is default for both state, also it set weight for server(s) if 
+provides while doing enable backend server(s).
 
 
 Example
 ------
 
-    # disable server in 'www' backend
-    - haproxy: action=disable_server host={{ inventory_hostname }} backend=www
+    # disable server in 'www' backend pool
+    - haproxy: state=disabled host={{ inventory_hostname }} backend=www
 
-    # disable server without backend name (apply to all backend)
-    - haproxy: action=disable_server host={{ inventory_hostname }}
+    # disable server without backend pool name (apply to all available backend pool)
+    - haproxy: state=disabled host={{ inventory_hostname }}
 
     # disable server, provide socket file
-    - haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
+    - haproxy: state=disabled host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
 
-    # disable backend server in 'www' backend and drop open sessions to it
-    - haproxy: action=disable_server host={{ inventory_hostname }} backend=www socket=/var/run/haproxy.sock shutdown_sessions=true
+    # disable backend server in 'www' backend pool and drop open sessions to it
+    - haproxy: state=disabled host={{ inventory_hostname }} backend=www socket=/var/run/haproxy.sock shutdown_sessions=true
 
-    # enable server in 'www' backend
-    - haproxy: action=enable_server host={{ inventory_hostname }} backend=www
+    # enable server in 'www' backend pool
+    - haproxy: state=enabled host={{ inventory_hostname }} backend=www
 
-    # Change a server(s) weight
-    - haproxy: action=set_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 backend=www
-
-    # Show the current weight and the initial weight of server(s)
-    - haproxy: action=get_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
+    # enable server in 'www' backend pool with change server(s) weight
+    - haproxy: state=enabled host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 backend=www
 
 Dependencies
 ------------

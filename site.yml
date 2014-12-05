@@ -8,29 +8,23 @@
 
   tasks:
 
-  - name: take out of load balancer pool and drop open sessions to it
-    haproxy: action=disable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock shutdown_sessions=true
+  - name: take out of {{inventory_hostname}} from all available load balancer pool and drop open sessions to it
+    haproxy: state=disabled host={{ inventory_hostname }} socket=/var/run/haproxy.sock shutdown_sessions=true
     delegate_to: "{{yourhaproxyserver}}"
 
   - name: actual steps would go here
     yum: name=acme-web-stack state=latest
 
-  - name: add back to load balancer pool
-    haproxy: action=enable_server host={{ inventory_hostname }} socket=/var/run/haproxy.sock
+  - name: {{inventory_hostname}} add back to load balancer pool
+    haproxy: state=enabled host={{ inventory_hostname }} socket=/var/run/haproxy.sock
     delegate_to: "{{yourhaproxyserver}}"
 
-  - name: Change a server(s) weight
-    haproxy: action=set_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 backend=www
+  - name: Change a server(s) weight, when adding back in lb pool
+    haproxy: state=enabled host={{ inventory_hostname }} socket=/var/run/haproxy.sock weight=10 backend=www
     delegate_to: "{{yourhaproxyserver}}"
     register: setweight
     tags: test
 
-  - name: Show the current weight and the initial weight of server(s)
-    haproxy: action=get_weight host={{ inventory_hostname }} socket=/var/run/haproxy.sock backend=www
-    delegate_to: "{{yourhaproxyserver}}"
-    register: getweight
-    tags: test
-
   - name: Print weight
-    debug: var=getweight
+    debug: var=setweight
     tags: test
